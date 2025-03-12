@@ -1,6 +1,6 @@
 {
   "name": "min-telnet-lib",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Simple and manual lib for connect telnet",
   "homepage": "https://github.com/skvoryanich/min-telnet-lib#readme",
   "license": "BSD-3-Clause",
@@ -14,26 +14,19 @@
     "simple",
     "minimal"
   ],
-  "types": "./dist/types/index.d.ts",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.mjs",
-  "exports": {
-    ".": {
-      "require": "./dist/cjs/index.js",
-      "import": "./dist/esm/index.mjs"
-    }
-  },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
+  "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "package.json"
   ],
   "scripts": {
     "lint": "eslint src --ext .ts",
     "lint-fix": "eslint src --ext .ts --fix",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json && npm run rename:esm",
-    "build": "npm run build:cjs && npm run build:esm",
+    "build": "tsc",
     "clean": "rimraf dist",
-    "rename:esm": "/bin/zsh ./scripts/fix-mjs.sh",
     "prepack": "npm run clean && npm run build",
     "test": "ts-node test.ts"
   },
