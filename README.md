@@ -29,3 +29,12 @@ async function run() {
 
 run().then()
 ```
+
+# Custom Exceptions
+- ERR_LOGIN_PASSWORD_REQUIRED - login and password are required
+- ERR_TIMEOUT_CONNECT - timeout connection
+- ERR_HOST_REQUIRED - host is required
+- ERR_AUTH - auth failed (reason in message)
+- ERR_TIMEOUT_AUTH - timeout auth
+- FAIL_VALID_CONNECT - failed validate connection (not found prompt)
+- FAIL_LOGIN_OR_PASSWORD - login or password is incorrect
