@@ -201,7 +201,7 @@ export class TelnetT {
             })
 
             this.client.once('error', (err: ServiceError) => {
-                reject(new ServiceError(`${this.host} TELNET ERROR: JSON - ${err.message}`, err.code))
+                reject(new ServiceError(`${this.host} TELNET ERROR: ${err.message}`, err.code))
             })
 
             this.client.once('connect', () => {
