@@ -200,7 +200,7 @@ export class TelnetT {
                 reject(new ServiceError(`${this.host} Could not connect in time`, 'ERR_TIMEOUT_CONNECT'))
             })
 
-            this.client.once('error', err => {
+            this.client.once('error', (err: Error) => {
                 reject(new ServiceError(`${this.host} TELNET ERROR: JSON - ${JSON.stringify(err)}`, 'NET_ERROR'))
             })
 
