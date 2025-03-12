@@ -1,15 +1,15 @@
-import { TelnetT } from './src/'
+import { TelnetT } from './src'
 
 async function run() {
     const client = new TelnetT({
-        host: 'IP'
+        host: '127.0.0.1'
     })
 
     await client.isConnected()
 
     await client.auth({
-        login: 'LOGIN',
-        password: 'PASSWORD',
+        login: 'admin',
+        password: 'admin',
     })
 
     /**
@@ -19,7 +19,7 @@ async function run() {
     //     await client.exec('terminal length 0')
     //     const resultCmd = await client.exec('show log')
     //     // eslint-disable-next-line no-console
-    //     console.log(resultCmd) // Результат для вывода пользователю
+    //     console.log(resultCmd)
     // } catch (e) {
     //     // eslint-disable-next-line no-console
     //     console.log(e)
@@ -33,7 +33,7 @@ async function run() {
     // try {
     //     const resultCmd = await client.exec('display version')
     //     // eslint-disable-next-line no-console
-    //     console.log(resultCmd) // Результат для вывода пользователю
+    //     console.log(resultCmd)
     // } catch (e) {
     //     // eslint-disable-next-line no-console
     //     console.log(e)
@@ -45,9 +45,9 @@ async function run() {
      * Example for D-Link
      */
     try {
-        const resultCmd = await client.exec('show log\nn\nn\nn\nn')
+        const resultCmd = await client.exec('show log')
         // eslint-disable-next-line no-console
-        console.log(resultCmd) // Результат для вывода пользователю
+        console.log(resultCmd)
     } catch (e) {
         // eslint-disable-next-line no-console
         console.log(e)

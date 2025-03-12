@@ -200,8 +200,8 @@ export class TelnetT {
                 reject(new ServiceError(`${this.host} Could not connect in time`, 'ERR_TIMEOUT_CONNECT'))
             })
 
-            this.client.once('error', (err: Error) => {
-                reject(new ServiceError(`${this.host} TELNET ERROR: JSON - ${JSON.stringify(err)}`, 'NET_ERROR'))
+            this.client.once('error', (err: ServiceError) => {
+                reject(new ServiceError(`${this.host} TELNET ERROR: JSON - ${err.message}`, err.code))
             })
 
             this.client.once('connect', () => {
@@ -219,7 +219,7 @@ export class TelnetT {
                 timeout: this.timeout
             })
 
-            this.client.setEncoding('utf8')
+            this.client.setEncoding('ascii')
             resolve()
         })
     }
@@ -235,7 +235,7 @@ export class TelnetT {
 
     private sanitizeAuthParams(data: AuthParams): AuthParams {
         if (!data.login || !data.password) {
-            throw new Error('login and password must not be empty')
+            throw new ServiceError('Login and password must not be empty', 'ERR_LOGIN_PASSWORD_REQUIRED')
         }
 
         return {
