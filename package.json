@@ -1,6 +1,6 @@
 {
   "name": "min-telnet-lib",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple and manual lib for connect telnet",
   "homepage": "https://github.com/skvoryanich/min-telnet-lib#readme",
   "license": "BSD-3-Clause",
@@ -14,9 +14,9 @@
     "simple",
     "minimal"
   ],
+  "types": "./dist/types/index.d.ts",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.mjs",
-  "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
       "require": "./dist/cjs/index.js",
