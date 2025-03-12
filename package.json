@@ -1,6 +1,6 @@
 {
   "name": "min-telnet-lib",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Simple and manual lib for connect telnet",
   "homepage": "https://github.com/skvoryanich/min-telnet-lib#readme",
   "license": "BSD-3-Clause",
@@ -22,11 +22,13 @@
     "package.json"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "ts-node test.ts"
   },
   "author": "skvoryanich",
   "devDependencies": {
     "@types/node": "^22.13.10",
+    "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   },
   "dependencies": {
