@@ -2,6 +2,12 @@
   "name": "min-telnet-lib",
   "version": "1.0.0",
   "description": "Simple and manual lib for connect telnet",
+  "homepage": "https://github.com/skvoryanich/min-telnet-lib#readme",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skvoryanich/min-telnet-lib.git"
+  },
   "keywords": [
     "telnet",
     "async",
