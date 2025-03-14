@@ -48,12 +48,23 @@ export class TelnetT {
         this.timeout = params.timeout!
     }
 
-    /**
-     * Function for checking and init connection to the device
+        /**
+     * @deprecated The method should not be used. It is used only for compatibility purpose.
+     * Use function {@link connect()} instead
+     * Deprecated function for checking and init connection to the device
      * @returns boolean
      */
     async isConnected(): Promise<boolean> {
         return !!await this.getConnect()
+    }
+
+    /**
+     * Function for init connection to the device
+     * @returns boolean
+     */
+    async connect(): Promise<void> {
+        await this.getConnect()
+        return
     }
 
     /**
