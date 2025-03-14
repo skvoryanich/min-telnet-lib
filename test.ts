@@ -5,7 +5,7 @@ async function run() {
         host: '127.0.0.1'
     })
 
-    await client.isConnected()
+    await client.connect()
 
     await client.auth({
         login: 'admin',
