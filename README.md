@@ -11,7 +11,7 @@ async function run() {
         host: '127.0.0.1'
     })
 
-    const connectState = await client.isConnected()
+    const connectState = await client.сonnect()
     if (!connectState) {
         console.log('Connection failed')
         return
