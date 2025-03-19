@@ -91,7 +91,7 @@ export class TelnetT {
             const authParams = this.sanitizeAuthParams(authData)
 
             const customTimeoute = setTimeout(() => {
-                throw new ServiceError('Timeout auth', 'ERR_TIMEOUT_AUTH')
+                reject(new ServiceError('Timeout auth', 'ERR_TIMEOUT_AUTH'))
             }, authParams.timeoutAuth)
 
             this.initLogin(authParams)
