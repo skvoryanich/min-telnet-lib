@@ -1,6 +1,6 @@
 {
   "name": "min-telnet-lib",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Simple and manual lib for connect telnet",
   "homepage": "https://github.com/skvoryanich/min-telnet-lib#readme",
   "license": "BSD-3-Clause",
