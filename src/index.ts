@@ -35,16 +35,18 @@ export class TelnetT {
     private readonly DEFAULT_REGEXP_PASSWORD = new RegExp('.*password*', 'i')
     private readonly DEFAULT_REGEXP_INCORRECT_LOGIN = new RegExp('(.*incorrect*|.*fail*)', 'i')
 
+    private debug: boolean
     private readonly port: number
     private readonly host: string
     private readonly timeout: number
     private client: Socket
 
-    constructor(connectParams: ConnectParams) {
+    constructor(connectParams: ConnectParams, debug = false) {
         const params = this.sanitizeInitConnectParams(connectParams)
         this.host = params.host
         this.port = params.port!
         this.timeout = params.timeout!
+        this.debug = debug
     }
 
         /**
@@ -174,6 +176,10 @@ export class TelnetT {
             }, timeout)
 
             const onData = (data: string) => {
+                if (this.debug) {
+                    console.log(data)
+                }
+
                 bufferLong = bufferLong + data
                 if (match.test(bufferLong)) {
                     clearTimeout(timeoutTimer)
