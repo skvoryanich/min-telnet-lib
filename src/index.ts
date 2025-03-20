@@ -35,7 +35,6 @@ export class TelnetT {
     private readonly DEFAULT_REGEXP_PASSWORD = new RegExp('.*password*', 'i')
     private readonly DEFAULT_REGEXP_INCORRECT_LOGIN = new RegExp('(.*incorrect*|.*fail*)', 'i')
 
-
     private readonly port: number
     private readonly host: string
     private readonly timeout: number
@@ -87,27 +86,24 @@ export class TelnetT {
      * @returns boolean
      */
     async auth(authData: AuthParams): Promise<boolean> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const authParams = this.sanitizeAuthParams(authData)
 
             const customTimeoute = setTimeout(() => {
                 reject(new ServiceError('Timeout auth', 'ERR_TIMEOUT_AUTH'))
             }, authParams.timeoutAuth)
 
-            this.initLogin(authParams)
-                .then(resultInputLogin => {
-                    if (!resultInputLogin) {
-                        clearTimeout(customTimeoute)
-                        reject(new ServiceError('Could not find regexp login', 'ERR_AUTH'))
-                    }
+            try {
+                if (await this.initLogin(authParams)) {
+                    clearTimeout(customTimeoute)
+                    return resolve(true)
+                }
 
-                    resolve(this.initPassword(authParams))
-                    clearTimeout(customTimeoute)
-                })
-                .catch(e => {
-                    clearTimeout(customTimeoute)
-                    reject(e)
-                })
+                clearTimeout(customTimeoute)
+            } catch (e) {
+                clearTimeout(customTimeoute)
+                reject(e)
+            }
         })
     }
 
@@ -128,36 +124,33 @@ export class TelnetT {
         return this.read(connection, end, timeout)
     }
 
-    private async initPassword(authParams: AuthParams): Promise<boolean> {
-        const connection = await this.getConnect()
-        const passwordBuff = await this.read(connection, authParams.regExpPassword!, authParams.timeoutAuth!)
-
-        if (authParams.regExpPassword!.test(passwordBuff)) {
-            await this.write(connection, authParams.password + '\n')
-            const endBuff = await this.read(connection, authParams.regExpConnected!, authParams.timeoutAuth!)
-
-            if (authParams.regExpFailedLogin!.test(endBuff)) {
-                throw new ServiceError('Incorrect login or password', 'FAIL_LOGIN_OR_PASSWORD')
-            }
-
-            if (!authParams.regExpConnected!.test(endBuff)) {
-                throw new ServiceError('Could not find any regexp for valid connect on response', 'FAIL_VALID_CONNECT')
-            }
-
-            return true
-        }
-
-        throw new ServiceError('Could not find regexp password', 'ERR_AUTH')
-    }
-
     private async initLogin(authParams: AuthParams): Promise<boolean> {
         const connection = await this.getConnect()
-        const loginBuff = await this.read(connection, authParams.regExpLogin!, authParams.timeoutAuth!)
+        const loginBuff = await this.read(connection, authParams.regExpLogin!, Math.round(authParams.timeoutAuth! / 2))
+
         if (authParams.regExpLogin!.test(loginBuff)) {
             await this.write(connection, authParams.login + '\n')
-            return true
+
+            const passwordBuff = await this.read(connection, authParams.regExpPassword!, Math.round(authParams.timeoutAuth! / 2))
+            if (authParams.regExpPassword!.test(passwordBuff)) {
+                await this.write(connection, authParams.password + '\n')
+                const endBuff = await this.read(connection, authParams.regExpConnected!, Math.round(authParams.timeoutAuth! / 2))
+
+                if (authParams.regExpFailedLogin!.test(endBuff)) {
+                    throw new ServiceError('Incorrect login or password', 'FAIL_LOGIN_OR_PASSWORD')
+                }
+
+                if (!authParams.regExpConnected!.test(endBuff)) {
+                    throw new ServiceError('Could not find any regexp for valid connect on response', 'FAIL_VALID_CONNECT')
+                }
+
+                return true
+            }
+
+            throw new ServiceError('Could not find regexp password', 'ERR_AUTH')
         }
-        return false
+
+        throw new ServiceError('Could not find regexp login', 'ERR_AUTH')
     }
 
     private async write(connection: Socket, data: string): Promise<boolean> {
