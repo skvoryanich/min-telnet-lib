@@ -131,10 +131,12 @@ export class TelnetT {
         const loginBuff = await this.read(connection, authParams.regExpLogin!, Math.round(authParams.timeoutAuth! / 2))
 
         if (authParams.regExpLogin!.test(loginBuff)) {
+            await this.delayMS(50)
             await this.write(connection, authParams.login + '\n')
 
             const passwordBuff = await this.read(connection, authParams.regExpPassword!, Math.round(authParams.timeoutAuth! / 2))
             if (authParams.regExpPassword!.test(passwordBuff)) {
+                await this.delayMS(50)
                 await this.write(connection, authParams.password + '\n')
                 const endBuff = await this.read(connection, authParams.regExpConnected!, Math.round(authParams.timeoutAuth! / 2))
 
@@ -256,5 +258,11 @@ export class TelnetT {
             regExpConnected: this.DEFAULT_REGEXP_END,
             ...data
         }
+    }
+
+    private async delayMS(n: number): Promise<void> {
+        return new Promise(resolve => {
+            setTimeout(resolve, n)
+        })
     }
 }
