@@ -74,6 +74,7 @@ export class TelnetT {
      */
     async disconnect(): Promise<void> {
         try {
+            this.client?.removeAllListeners()
             this.client?.end()
             this.client?.destroy()
             return
@@ -170,23 +171,35 @@ export class TelnetT {
     private async read(connection: Socket, match: RegExp, timeout: number): Promise<string> {
         return new Promise(resolve => {
             let bufferLong = ''
+            let isResolved = false
+
+            const cleanup = () => {
+                if (!isResolved) {
+                    connection.removeListener('data', onData)
+                    clearTimeout(timeoutTimer)
+                    isResolved = true
+                }
+            }
 
             const timeoutTimer = setTimeout(() => {
+                cleanup()
                 resolve(bufferLong)
-                connection.removeListener('data', onData)
-                clearTimeout(timeoutTimer)
             }, timeout)
 
             const onData = (data: string) => {
-                if (this.debug) {
-                    console.log(data)
-                }
+                try {
+                    if (this.debug) {
+                        console.log(data)
+                    }
 
-                bufferLong = bufferLong + data
-                if (match.test(bufferLong)) {
-                    clearTimeout(timeoutTimer)
+                    bufferLong = bufferLong + data
+                    if (match.test(bufferLong)) {
+                        cleanup()
+                        resolve(bufferLong)
+                    }
+                } catch (_e) {
+                    cleanup()
                     resolve(bufferLong)
-                    connection.removeListener('data', onData)
                 }
             }
 
@@ -206,6 +219,7 @@ export class TelnetT {
 
             if (this.client && !this.client.connecting) {
                 resolve(this.client)
+                return
             }
 
             this.client.once('timeout', () => {
