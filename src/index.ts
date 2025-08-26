@@ -122,6 +122,7 @@ export class TelnetT {
      * new RegExp('.*>|.*#')
      * ```
      * @param timeout - number
+     * @param pageHeight - optional number to temporarily set terminal height for this command
      * @returns string
      */
     async exec(cmd: string, end = this.DEFAULT_REGEXP_END, timeout = this.DEFAULT_TELNET_TIMEOUT_EXEC, pageHeight?: number): Promise<string> {

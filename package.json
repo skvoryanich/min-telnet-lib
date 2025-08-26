@@ -1,6 +1,6 @@
 {
   "name": "min-telnet-lib",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Universal telnet client library for Node.js with smart pagination handling, NAWS terminal negotiation, and enterprise-grade connection management for network devices",
   "homepage": "https://github.com/skvoryanich/min-telnet-lib#readme",
   "license": "BSD-3-Clause",
