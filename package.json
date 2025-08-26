@@ -1,7 +1,7 @@
 {
   "name": "min-telnet-lib",
-  "version": "1.0.11",
-  "description": "Simple and manual lib for connect telnet",
+  "version": "1.1.1",
+  "description": "Universal telnet client library for Node.js with smart pagination handling, NAWS terminal negotiation, and enterprise-grade connection management for network devices",
   "homepage": "https://github.com/skvoryanich/min-telnet-lib#readme",
   "license": "BSD-3-Clause",
   "repository": {
@@ -10,9 +10,25 @@
   },
   "keywords": [
     "telnet",
+    "network",
+    "cisco",
+    "switch",
+    "router",
+    "dlink",
+    "huawei",
+    "snr",
+    "pagination",
+    "naws",
+    "terminal",
+    "networking",
+    "automation",
+    "enterprise",
     "async",
-    "simple",
-    "minimal"
+    "typescript",
+    "nodejs",
+    "client",
+    "protocol",
+    "connection"
   ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,16 +39,20 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "ts-node test.ts"
+    "test": "ts-node test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "author": "skvoryanich",
   "devDependencies": {
     "@types/node": "^22.13.10",
+    "node": "^23.9.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "node": "^23.9.0",
     "ts-custom-error": "^3.3.1"
   }
 }

@@ -29,8 +29,11 @@ export class TelnetT {
     private readonly DEFAULT_TELNET_TIMEOUT_CONNECT = 7500
     private readonly DEFAULT_TELNET_TIMEOUT_AUTH = 7500
     private readonly DEFAULT_TELNET_TIMEOUT_EXEC = 7500
+    
+    private readonly DEFAULT_TERMINAL_WIDTH = 80
+    private readonly DEFAULT_TERMINAL_HEIGHT = 24
 
-    private readonly DEFAULT_REGEXP_END = new RegExp('.*>|.*#')
+    private readonly DEFAULT_REGEXP_END = new RegExp('.*[>#]\\s*$')
     private readonly DEFAULT_REGEXP_LOGIN = new RegExp('(.*username*|.*login*|)', 'i')
     private readonly DEFAULT_REGEXP_PASSWORD = new RegExp('.*password*', 'i')
     private readonly DEFAULT_REGEXP_INCORRECT_LOGIN = new RegExp('(.*incorrect*|.*fail*)', 'i')
@@ -121,10 +124,32 @@ export class TelnetT {
      * @param timeout - number
      * @returns string
      */
-    async exec(cmd: string, end = this.DEFAULT_REGEXP_END, timeout = this.DEFAULT_TELNET_TIMEOUT_EXEC): Promise<string> {
+    async exec(cmd: string, end = this.DEFAULT_REGEXP_END, timeout = this.DEFAULT_TELNET_TIMEOUT_EXEC, pageHeight?: number): Promise<string> {
         const connection = await this.getConnect()
-        await this.write(connection, cmd + '\n')
-        return this.read(connection, end, timeout)
+        
+        // If pageHeight is specified, temporarily change terminal height
+        if (pageHeight !== undefined) {
+            await this.setWindowSize(this.DEFAULT_TERMINAL_WIDTH, pageHeight)
+        }
+        
+        try {
+            await this.write(connection, cmd + '\n')
+            const result = await this.read(connection, end, timeout)
+            
+            // If pageHeight was specified, trim empty lines and restore default height
+            if (pageHeight !== undefined) {
+                await this.setWindowSize(this.DEFAULT_TERMINAL_WIDTH, this.DEFAULT_TERMINAL_HEIGHT)
+                return this.trimEmptyLines(result)
+            }
+            
+            return result
+        } catch (error) {
+            // Restore default height even if command failed
+            if (pageHeight !== undefined) {
+                await this.setWindowSize(this.DEFAULT_TERMINAL_WIDTH, this.DEFAULT_TERMINAL_HEIGHT)
+            }
+            throw error
+        }
     }
 
     private async initLogin(authParams: AuthParams): Promise<boolean> {
@@ -161,8 +186,16 @@ export class TelnetT {
     private async write(connection: Socket, data: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
             try {
+                if (this.debug) {
+                    const hex = Buffer.from(data, 'ascii').toString('hex').match(/.{1,2}/g)?.join(' ') || ''
+                    console.log(`[${new Date().toISOString()}] WRITING HEX: ${hex}`)
+                    console.log(`[${new Date().toISOString()}] WRITING JSON: ${JSON.stringify(data)}`)
+                }
                 resolve(connection.write(data))
             } catch (e) {
+                if (this.debug) {
+                    console.log(`[${new Date().toISOString()}] WRITE ERROR: ${e}`)
+                }
                 reject(e)
             }
         })
@@ -172,6 +205,7 @@ export class TelnetT {
         return new Promise(resolve => {
             let bufferLong = ''
             let isResolved = false
+            let quitSent = false
 
             const cleanup = () => {
                 if (!isResolved) {
@@ -182,6 +216,10 @@ export class TelnetT {
             }
 
             const timeoutTimer = setTimeout(() => {
+                if (this.debug) {
+                    console.log(`[${new Date().toISOString()}] TIMEOUT REACHED! Buffer length: ${bufferLong.length}`)
+                    console.log(`[${new Date().toISOString()}] TIMEOUT BUFFER TAIL: ${JSON.stringify(bufferLong.slice(-200))}`)
+                }
                 cleanup()
                 resolve(bufferLong)
             }, timeout)
@@ -189,15 +227,72 @@ export class TelnetT {
             const onData = (data: string) => {
                 try {
                     if (this.debug) {
-                        console.log(data)
+                        // Hex dump for analyzing raw bytes
+                        const hex = Buffer.from(data, 'ascii').toString('hex').match(/.{1,2}/g)?.join(' ') || ''
+                        console.log(`[${new Date().toISOString()}] RAW HEX: ${hex}`)
+                        console.log(`[${new Date().toISOString()}] RAW JSON: ${JSON.stringify(data)}`)
+                        console.log(`[${new Date().toISOString()}] BUFFER LENGTH: ${bufferLong.length} -> ${bufferLong.length + data.length}`)
+                        
+                        // Check for telnet IAC sequences
+                        if (data.includes('\xFF')) {
+                            console.log(`[${new Date().toISOString()}] TELNET IAC DETECTED!`)
+                        }
+                        
+                        // Check for ANSI sequences
+                        if (data.includes('\x1B')) {
+                            const ansiMatches = data.match(/\x1B\[[0-9;]*[A-Za-z]/g) || []
+                            console.log(`[${new Date().toISOString()}] ANSI SEQUENCES: ${JSON.stringify(ansiMatches)}`)
+                        }
+                        
+                        // Check for control chars
+                        const controlChars = data.match(/[\x00-\x1F\x7F]/g) || []
+                        console.log(`[${new Date().toISOString()}] CONTROL CHARS: ${controlChars.map(c => `\\x${c.charCodeAt(0).toString(16).padStart(2, '0')}`).join(' ')}`)
                     }
 
                     bufferLong = bufferLong + data
+                    
+                    // Check for BEL - system waiting for user input
+                    if (data.includes('\x07') && !quitSent) {
+                        if (this.debug) {
+                            console.log(`[${new Date().toISOString()}] BEL DETECTED! System waiting for input, sending Ctrl+C to quit...`)
+                        }
+                        quitSent = true
+                        connection.write('\x03') // Send Ctrl+C to quit pagination
+                        setTimeout(() => {
+                            cleanup()
+                            resolve(bufferLong)
+                        }, 1000) // Give device time to process Ctrl+C and return to prompt
+                        return
+                    }
+                    
+                    if (this.debug) {
+                        console.log(`[${new Date().toISOString()}] TESTING REGEX AGAINST BUFFER (length: ${bufferLong.length})`)
+                        console.log(`[${new Date().toISOString()}] REGEX PATTERN: ${match.source}`)
+                        console.log(`[${new Date().toISOString()}] REGEX MATCH: ${match.test(bufferLong)}`)
+                    }
+
+                    // Check if this looks like a pagination prompt and no normal prompt found
+                    if (bufferLong.includes('CTRL+C') && bufferLong.includes('ESC') && bufferLong.includes('Quit') && !quitSent) {
+                        if (this.debug) {
+                            console.log(`[${new Date().toISOString()}] PAGINATION PROMPT DETECTED! Sending Ctrl+C to quit...`)
+                        }
+                        quitSent = true
+                        connection.write('\x03')
+                        // Continue reading for actual command prompt
+                        return
+                    }
+
                     if (match.test(bufferLong)) {
+                        if (this.debug) {
+                            console.log(`[${new Date().toISOString()}] REGEX MATCHED! RESOLVING...`)
+                        }
                         cleanup()
                         resolve(bufferLong)
                     }
                 } catch (_e) {
+                    if (this.debug) {
+                        console.log(`[${new Date().toISOString()}] ERROR IN onData: ${_e}`)
+                    }
                     cleanup()
                     resolve(bufferLong)
                 }
@@ -246,6 +341,12 @@ export class TelnetT {
             })
 
             this.client.setEncoding('ascii')
+            
+            // Set default terminal window size (80x24)
+            this.client.on('connect', () => {
+                this.setWindowSize(this.DEFAULT_TERMINAL_WIDTH, this.DEFAULT_TERMINAL_HEIGHT)
+            })
+            
             resolve()
         })
     }
@@ -272,6 +373,20 @@ export class TelnetT {
             regExpConnected: this.DEFAULT_REGEXP_END,
             ...data
         }
+    }
+
+    private async setWindowSize(width: number, height: number): Promise<void> {
+        const naws = Buffer.from([
+            255, 250, 31,  // IAC SB NAWS
+            Math.floor(width / 256), width % 256,   // width high/low
+            Math.floor(height / 256), height % 256, // height high/low  
+            255, 240       // IAC SE
+        ])
+        this.client.write(naws)
+    }
+
+    private trimEmptyLines(text: string): string {
+        return text.replace(/\n\s*$/g, '')
     }
 
     private async delayMS(n: number): Promise<void> {
