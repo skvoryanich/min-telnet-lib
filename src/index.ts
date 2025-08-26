@@ -136,14 +136,10 @@ export class TelnetT {
         try {
             await this.write(connection, cmd + '\n')
             const result = await this.read(connection, end, timeout)
-            
-            // If pageHeight was specified, trim empty lines and restore default height
-            if (pageHeight !== undefined) {
-                await this.setWindowSize(this.DEFAULT_TERMINAL_WIDTH, this.DEFAULT_TERMINAL_HEIGHT)
-                return this.trimEmptyLines(result)
-            }
-            
-            return result
+
+            await this.setWindowSize(this.DEFAULT_TERMINAL_WIDTH, this.DEFAULT_TERMINAL_HEIGHT)
+
+            return this.trimEmptyLines(result)
         } catch (error) {
             // Restore default height even if command failed
             if (pageHeight !== undefined) {
