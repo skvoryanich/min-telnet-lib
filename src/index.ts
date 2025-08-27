@@ -275,7 +275,10 @@ export class TelnetT {
                         }
                         quitSent = true
                         connection.write('\x03')
-                        // Continue reading for actual command prompt
+                        setTimeout(() => {
+                            cleanup()
+                            resolve(bufferLong)
+                        }, 1000) // Give device time to process Ctrl+C and return to prompt
                         return
                     }
 
