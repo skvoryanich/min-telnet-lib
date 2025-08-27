@@ -30,7 +30,7 @@ export class TelnetT {
     private readonly DEFAULT_TELNET_TIMEOUT_AUTH = 7500
     private readonly DEFAULT_TELNET_TIMEOUT_EXEC = 7500
     
-    private readonly DEFAULT_TERMINAL_WIDTH = 80
+    private readonly DEFAULT_TERMINAL_WIDTH = 100
     private readonly DEFAULT_TERMINAL_HEIGHT = 24
 
     private readonly DEFAULT_REGEXP_END = new RegExp('.*[>#]\\s*$')
@@ -342,7 +342,7 @@ export class TelnetT {
 
             this.client.setEncoding('ascii')
             
-            // Set default terminal window size (80x24)
+            // Set default terminal window size (100x24)
             this.client.on('connect', () => {
                 this.setWindowSize(this.DEFAULT_TERMINAL_WIDTH, this.DEFAULT_TERMINAL_HEIGHT)
             })

@@ -121,7 +121,7 @@ const result = await client.exec('show log', undefined, undefined, 50)
 // 1. Sets terminal height to 50 lines
 // 2. Executes the command  
 // 3. Handles any pagination prompts
-// 4. Restores default 80x24 terminal size
+// 4. Restores default 100x24 terminal size
 // 5. Returns complete output
 ```
 
@@ -260,7 +260,7 @@ try {
 
 The library implements RFC 1073 NAWS (Negotiate About Window Size) protocol:
 
-- **Default size:** 80 columns × 24 rows
+- **Default size:** 100 columns × 24 rows
 - **Automatic negotiation:** Sent during connection establishment
 - **Dynamic resizing:** Temporary changes for specific commands
 - **Fallback support:** Works even if device doesn't support NAWS
