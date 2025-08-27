@@ -383,7 +383,9 @@ export class TelnetT {
     }
 
     private trimEmptyLines(text: string): string {
-        return text.replace(/\n\s*$/g, '')
+        // First remove ANSI escape sequences, then trim empty lines
+        const withoutAnsi = text.replace(/\u001b\[[0-9;]*[A-Za-z]/g, '').replace(/\r/g, '')
+        return withoutAnsi.replace(/\n\s*$/g, '')
     }
 
     private async delayMS(n: number): Promise<void> {
